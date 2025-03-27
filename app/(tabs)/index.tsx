@@ -1,59 +1,40 @@
-import { router } from 'expo-router';
-import React, { useState, useRef } from 'react';
-import { View, TextInput, Button, StyleSheet } from 'react-native';
-import { useAuthStore } from './store';
+import React, { useState, useEffect } from 'react';
+import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function LoginScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const login=useAuthStore((state)=>state.login);
+export default function CounterScreen() {
+  const [counter, setCounter] = useState(0);
 
-  // Define refs with proper type (TextInput | null)
-  const emailRef = useRef<TextInput | null>(null);
-  const passwordRef = useRef<TextInput | null>(null);
+  
+  useEffect(() => {
+    const loadCounter = async () => {
+      const savedCounter = await AsyncStorage.getItem('count');
+      if (savedCounter !== null) {
+        setCounter(parseInt(savedCounter, 10)); 
+      }
+    };
+    loadCounter();
+  }, []);
 
-  const handleLogin = () => {
-    if (!email.includes('@')) {
-    
-      emailRef.current?.focus();
-      return;
-    }
-    if (password.length < 6) {
-      
-      passwordRef.current?.focus(); 
-      return;
-    }
-    login();
-    
-    router.replace('/home');
-
-    
-    
-  };
+  
+  useEffect(() => {
+    AsyncStorage.setItem('count', counter.toString());
+  }, [counter]);
 
   return (
     <View style={styles.container}>
-      <TextInput
-        ref={emailRef}
-        style={styles.input}
-        placeholder="Email"
-        keyboardType="email-address"
-        autoCapitalize="none"
-        value={email}
-        onChangeText={setEmail}
-        returnKeyType="next"
-        onSubmitEditing={() => passwordRef.current?.focus()} 
-      />
-      <TextInput
-        ref={passwordRef}
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-        returnKeyType="done"
-      />
-      <Button title="Login" onPress={handleLogin} />
+      <View style={styles.counterContainer}>
+        <TouchableOpacity style={[styles.button, styles.minusButton]} onPress={() => setCounter(counter - 1)}>
+          <Text style={styles.buttonText}>-1</Text>
+        </TouchableOpacity>
+        <Text style={styles.counterText}>{counter}</Text>
+        <TouchableOpacity style={[styles.button, styles.plusButton]} onPress={() => setCounter(counter + 1)}>
+          <Text style={styles.buttonText}>+1</Text>
+        </TouchableOpacity>
+      </View>
+      <TouchableOpacity style={[styles.button, styles.resetButton]} onPress={() => setCounter(0)}>
+        <Text style={styles.buttonText}>Reset</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -62,14 +43,41 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
   },
-  input: {
-    height: 50,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    marginBottom: 15,
+  counterContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  counterText: {
+    fontSize: 30,
+    fontWeight: 'bold',
+    marginHorizontal: 20,
+  },
+  button: {
+    paddingVertical: 15,
+    paddingHorizontal: 25,
+    borderRadius: 10,
+    marginHorizontal: 10,
+    alignItems: 'center',
+  },
+  plusButton: {
+    backgroundColor: '#28a745',
+  },
+  minusButton: {
+    backgroundColor: '#dc3545', 
+  },
+  resetButton: {
+    backgroundColor: '#007bff', 
+    marginTop: 20,
+    width: 120, 
+  },
+  buttonText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
   },
 });
+
